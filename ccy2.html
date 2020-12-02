@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <title>CCYWATCH2</title>
+        <link rel="canonical" href="https://getbootstrap.com/docs/4.3/examples/starter-template/">
+        <link href="/docs/4.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <style>
+
+              </style>
+              <!-- Custom styles for this template -->
+              <link href="starter-template.css" rel="stylesheet">
+    </head> 
+
+  
+
+    <body class="text-center">
+        <main role="main" class="container">
+            <canvas id="myChart_canvas" width="600" height="350"></canvas>
+            <div class="starter-template">
+                    <hr> 
+                    <p class="lead">Date Range</p>
+                    <div class="relative" id="slider-range"></div>
+                    <p id="p1">Hello World!</p>
+            </div>
+        </main><!-- /.container -->
+        
+        <script type="text/javascript" src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    </body> 
+
+
+    <script>
+    var today = new Date();
+    var startDate = '2018-01-03';
+    var quotes1;
+    var quotes2;
+    var date1;
+    var date2;
+    var quotes = {};
+    var currencies = [];
+    var basecurr='JPY';
+    var values=[];
+    var myChart;
+
+    setToday();
+    function setToday(){ 
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        today = yyyy + '-' + mm + '-' + dd;
+        today = "2019-09-04";
+        date1=startDate;
+        date2=today;
+        document.getElementById("p1").innerHTML =  (startDate + " - " + today);
+        download(startDate, today, basecurr);
+    }
+
+    function download(d1, d2, basecurr){
+        var newurl1 = "http://localhost:3000/simple_get?textField="+ d1 +"&source="+basecurr;
+        var newurl2 = "http://localhost:3000/simple_get?textField="+ d2 +"&source="+basecurr;
+        var data1;
+        var data2;
+        var quotes={};
+        var currencies = [];
+        var values=[];
+        console.log("going to download")
+        $.when(
+            $.get( newurl1 , function( res ) {
+            data1=JSON.parse(res);
+            }),
+            $.get( newurl2 , function( res ) {
+            data2=JSON.parse(res);
+            })
+        ).then(function()
+        {   
+            for (k in data1) {
+                quotes[k.slice(3,6)] = (1-(data2[k] / data1[k]))*100;
+            }
+            for (k in quotes){currencies.push(k)};
+            for (v in quotes){values.push(quotes[v])};
+            renderChart(values, currencies, quotes);
+        });
+    }
+
+    $(function() {
+        $( "#slider-range" ).slider({
+            "ui-slider": "highlight",
+            range: true,
+            min: new Date('January 01, 2012 00:0:00').getTime() / 1000,
+            max: new Date().getTime() / 1000,
+            step: 86400,
+            values: [ new Date(startDate).getTime() / 1000, new Date().getTime() / 1000 ],
+            slide: function( event, ui ) {
+                document.getElementById("p1").innerHTML =  (new Date(ui.values[ 0 ] *1000).toISOString().slice(0,10)) + " - " + (new Date(ui.values[ 1 ] *1000)).toISOString().slice(0,10);
+            },
+            stop: function( event, ui ) {   
+                                            date1 = (new Date(ui.values[ 0 ] *1000)).toISOString().slice(0,10);
+                                            date2 = (new Date(ui.values[ 1 ] *1000)).toISOString().slice(0,10);
+                                            download(date1, date2, basecurr);
+                                            myChart.destroy();   
+                                        }
+            
+        });
+        $( "#amount" ).val( (new Date($( "#slider-range" ).slider( "values", 0 )*1000).toDateString()) + " - " + (new Date($( "#slider-range" ).slider( "values", 1 )*1000)).toDateString());
+    });
+
+    function renderChart(data, labels, quotes) {
+            var ctx = document.getElementById("myChart_canvas");            
+            myChart = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "disable",
+                        data: data,
+                        backgroundColor: ["#e69675", "#617f7f","#c97f04","#efd9a7","#66202A", "#75ACC0", "#E1B878", "#C8782F", "#f77754", "#584b42", "#537d91", "#a4d1c8", "#d2fafb", "#6bc5d2", "#105e62", "#b5525c", "#a0c334", "#5d5d5d", "#e5d429", "#bbeaa6", "#e3c878", "#ed9a73", "#e688a1", "#bd83ce"],
+                        borderWidth: 1
+                    }]
+                },
+                title: {
+                        text: 'Custom DataLabels',
+                        align: 'center',
+                        floating: true
+                    },
+                options: {
+                    tooltips:{
+                        callbacks: {
+                            label: function(tooltipItem, data){
+                                                                var ticker = tooltipItem.label+basecurr;
+                                                                var percent = String(Number(tooltipItem.value).toFixed(2));
+                                                                return ticker +" : "+ percent+ " %"},
+                                                                title: () => null,
+                                                                
+                                                              }, yAlign: 'left',
+                                   },
+                    title: {
+                        display: true,
+                        text: "Change in currencies relative to "+basecurr+" between "+date1+" - "+date2,
+                        position: 'top'
+                    },
+                    legend: {display: false},
+  
+
+                    //events: ['click', 'hover'],
+
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                suggestedMin: -1*(Math.max(...data.map(Math.abs))),
+                                suggestedMax: Math.max(...data.map(Math.abs)),
+                                beginAtZero: false
+                            }
+                        }]
+                    }                 
+                }
+            });
+
+            ctx.onclick = function(evt) {
+                var activePoints = myChart.getElementsAtEvent(evt);
+                if (activePoints[0]) {
+                    myChart.destroy();
+                    var chartData = activePoints[0]['_chart'].config.data;
+                    var idx = activePoints[0]['_index'];
+                    var label = chartData.labels[idx];
+                    var value = chartData.datasets[0].data[idx];
+                    basecurr=label;
+                    download(date1, date2, basecurr);
+                }
+
+            }
+
+            
+    }
+    </script>
+
+
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "ccywatch",
+  "version": "1.0.0",
+  "description": "CCY watch app",
+  "main": "server.js",
+  "scripts": {
+    "test": "console.log(\"hello\")",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "ccy"
+  ],
+  "author": "homoki",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "promise": "^8.0.3",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  }
+}
